@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌺 NAZUAN AHMAD · Wallpaper Telegram</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #0a1f14;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
+      overflow: hidden;
+    }
+    .container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at 30% 20%, #0d2a1a, #06120c);
+      padding: 10px;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-width: 1200px;
+      max-height: 800px;
+      aspect-ratio: 3 / 2;
+      border-radius: 12px;
+      background: radial-gradient(circle at 30% 20%, #7fc7d9, #3b7a5e);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 200, 0.05);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    canvas:active {
+      transform: scale(0.99);
+    }
+
+    /* Tombol Download & Share */
+    .toolbar {
+      position: fixed;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(14px);
+      padding: 10px 20px;
+      border-radius: 50px;
+      border: 1px solid rgba(255, 255, 200, 0.1);
+      z-index: 100;
+      opacity: 0.4;
+      transition: opacity 0.3s;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .toolbar:hover {
+      opacity: 1;
+    }
+    .toolbar button {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 200, 0.12);
+      color: #e2f0d6;
+      padding: 6px 16px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: inherit;
+      transition: all 0.2s;
+      backdrop-filter: blur(4px);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .toolbar button:hover {
+      background: rgba(255, 215, 100, 0.15);
+      border-color: #f5c542;
+      transform: scale(1.05);
+    }
+    .toolbar button.download {
+      background: rgba(245, 197, 66, 0.15);
+      border-color: rgba(245, 197, 66, 0.3);
+    }
+    .toolbar button.download:hover {
+      background: rgba(245, 197, 66, 0.25);
+    }
+    .toolbar .label {
+      color: #b6d8a8;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0 4px;
+    }
+    .toolbar .fps {
+      color: #8aaa7a;
+      font-size: 10px;
+      font-variant-numeric: tabular-nums;
+      min-width: 40px;
+      text-align: center;
+    }
+    @media (max-width: 768px) {
+      .toolbar {
+        bottom: 12px;
+        padding: 8px 12px;
+        gap: 6px;
+        width: 94%;
+        border-radius: 30px;
+      }
+      .toolbar button {
+        font-size: 10px;
+        padding: 4px 10px;
+      }
+      .toolbar .label {
+        font-size: 9px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <canvas id="canvas"></canvas>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <span class="label">🌬️</span>
+  <button onclick="toggleWind()">⏸️ Angin</button>
+  <button onclick="toggleParticles()">✨ Partikel</button>
+  <button onclick="resetText()">⬆️ Reset</button>
+  <button class="download" onclick="downloadWallpaper()">📥 Download</button>
+  <button onclick="copyLink()">🔗 Copy Link</button>
+  <span class="fps" id="fpsDisplay">60</span>
+</div>
+
+<script>
+  (function() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // ===== UKURAN 3:2 (optimal untuk wallpaper Telegram) =====
+    function resize() {
+      const w = window.innerWidth - 20;
+      const h = window.innerHeight - 20;
+      const ratio = 3 / 2;
+      
+      let width, height;
+      if (w / h > ratio) {
+        height = Math.min(h, 800);
+        width = height * ratio;
+      } else {
+        width = Math.min(w, 1200);
+        height = width / ratio;
+      }
+      
+      canvas.width = 1200;
+      canvas.height = 800;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const W = 1200;
+    const H = 800;
+
+    // ==========  STATE  ==========
+    let windEnabled = true;
+    let particlesEnabled = true;
+    let time = 0;
+    let fps = 60;
+    let frameCount = 0;
+    let lastFpsUpdate = 0;
+
+    // ==========  ANGIN  ==========
+    let windStrength = 0.5;
+    let windAngle = 0.10;
+    let windGust = 0;
+
+    // ==========  RUMPUT  ==========
+    let grassBlades = [];
+    const GRASS_COUNT = 300;
+
+    // ==========  BUNGA  ==========
+    let flowers = [];
+
+    // ==========  DAUN  ==========
+    let leaves = [];
+
+    // ==========  PARTIKEL  ==========
+    let windParticles = [];
+
+    // ==========  RIAK  ==========
+    let ripples = [];
+
+    // ==========  TEKS  ==========
+    let textY = 0;
+    let textTargetY = 0;
+    let textVelocity = 0;
+
+    // =============================================
+    //  INISIALISASI
+    // =============================================
+    function init() {
+      // -- rumput --
+      grassBlades = [];
+      for (let i = 0; i < GRASS_COUNT; i++) {
+        grassBlades.push({
+          x: 10 + Math.random() * (W - 20),
+          y: 600 + Math.random() * 180,
+          height: 12 + Math.random() * 30,
+          phase: Math.random() * 6.28,
+          stiffness: 0.5 + Math.random() * 0.9,
+          width: 1.5 + Math.random() * 2.5,
+          color: `hsl(${100 + Math.random() * 35}, ${45 + Math.random() * 35}%, ${28 + Math.random() * 28}%)`
+        });
+      }
+
+      // -- bunga --
+      flowers = [];
+      const flowerColors = ['#f27a7a', '#f5a08a', '#f0b8a0', '#f28b8b', '#f5b0a0', '#f7b8a0', '#e88484', '#f5a0a0'];
+      const flowerPositions = [
+        [140, 520], [340, 290], [580, 200], [880, 430], [520, 600],
+        [1040, 250], [60, 340], [780, 620], [280, 440], [960, 600],
+        [660, 380], [1180, 670], [40, 680], [760, 280], [420, 600],
+        [1120, 520], [220, 230], [680, 480], [380, 160], [900, 160]
+      ];
+      for (let p of flowerPositions) {
+        const size = 14 + Math.random() * 26;
+        flowers.push({
+          x: p[0], y: p[1],
+          size: size,
+          phase: Math.random() * 6.28,
+          petalCount: 5 + Math.floor(Math.random() * 4),
+          color: flowerColors[Math.floor(Math.random() * flowerColors.length)],
+          centerColor: '#f7d070',
+          sway: 0.3 + Math.random() * 0.6,
+        });
+      }
+
+      // -- daun --
+      leaves = [];
+      for (let i = 0; i < 30; i++) {
+        leaves.push(createLeaf());
+      }
+
+      // -- partikel --
+      windParticles = [];
+      for (let i = 0; i < 50; i++) {
+        windParticles.push(createWindParticle());
+      }
+    }
+
+    function createLeaf() {
+      return {
+        x: Math.random() * W,
+        y: Math.random() * H * 0.5 + 30,
+        vx: (Math.random() - 0.5) * 0.7,
+        vy: (Math.random() - 0.5) * 0.4 - 0.3,
+        size: 5 + Math.random() * 15,
+        rot: Math.random() * 6.28,
+        rotSpeed: (Math.random() - 0.5) * 0.04,
+        color: `hsl(${70 + Math.random() * 60}, ${45 + Math.random() * 35}%, ${28 + Math.random() * 32}%)`,
+        life: 0.5 + Math.random() * 0.5,
+        phase: Math.random() * 6.28
+      };
+    }
+
+    function createWindParticle() {
+      return {
+        x: Math.random() * W * 0.7,
+        y: 20 + Math.random() * H * 0.5,
+        size: 2 + Math.random() * 5,
+        speed: 0.7 + Math.random() * 1.8,
+        life: 0.5 + Math.random() * 0.5,
+        phase: Math.random() * 6.28
+      };
+    }
+
+    init();
+
+    // =============================================
+    //  GAMBAR
+    // =============================================
+
+    function drawGrass(time) {
+      const wind = windEnabled ? (windStrength + windGust) : 0;
+      for (let g of grassBlades) {
+        const sway = Math.sin(time * 1.3 + g.phase) * 0.25 * wind * g.stiffness;
+        const swayX = Math.sin(time * 0.9 + g.phase * 1.1) * 0.18 * wind * g.stiffness;
+
+        ctx.save();
+        ctx.translate(g.x, g.y);
+        ctx.rotate(swayX * 0.4 + 0.05);
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(
+          sway * 2.5 - 2,
+          -g.height * 0.55,
+          sway * 3.5,
+          -g.height
+        );
+        ctx.strokeStyle = g.color;
+        ctx.lineWidth = g.width;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = 'rgba(0,20,0,0.15)';
+        ctx.shadowBlur = 4;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.ellipse(sway * 3.0, -g.height, 3, 2, sway * 0.2, 0, Math.PI * 2);
+        ctx.fillStyle = g.color;
+        ctx.shadowBlur = 2;
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function drawFlower(f, time) {
+      const wind = windEnabled ? (windStrength + windGust) : 0;
+      const swayOffset = Math.sin(time * 0.7 + f.phase) * 0.15 * wind * f.sway;
+      const { x, y, size, petalCount, color, centerColor } = f;
+
+      ctx.save();
+      ctx.translate(x + swayOffset * 2.5, y + Math.sin(time * 0.5 + f.phase) * 0.4 * wind * 0.3);
+
+      for (let i = 0; i < petalCount; i++) {
+        const angle = (i / petalCount) * Math.PI * 2 + time * 0.04 + f.phase * 0.2;
+        const petalLen = size * (0.85 + 0.15 * Math.sin(angle * 1.5 + time * 0.6 + f.phase));
+        const px = Math.cos(angle) * petalLen * 0.65;
+        const py = Math.sin(angle) * petalLen * 0.65;
+        const rad = petalLen * 0.4;
+
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(angle + 0.15);
+
+        const grad = ctx.createRadialGradient(0, 0, 2, 0, 0, rad);
+        grad.addColorStop(0, color);
+        grad.addColorStop(0.7, color);
+        grad.addColorStop(1, '#c06060');
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rad * 0.85, rad * 0.5, 0, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.shadowColor = 'rgba(60, 20, 20, 0.2)';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+
+      ctx.beginPath();
+      ctx.arc(0, 0, size * 0.2, 0, Math.PI * 2);
+      const cg = ctx.createRadialGradient(-2, -3, 2, 0, 0, size * 0.24);
+      cg.addColorStop(0, '#ffe88a');
+      cg.addColorStop(0.7, centerColor);
+      cg.addColorStop(1, '#c69040');
+      ctx.fillStyle = cg;
+      ctx.shadowColor = 'rgba(0,0,0,0.15)';
+      ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      for (let k = 0; k < 7; k++) {
+        const a = k * 0.9 + time * 0.08;
+        const r = size * 0.26;
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * r, Math.sin(a) * r, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#f7d868';
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = '#b08030';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      ctx.restore();
+    }
+
+    function drawLeaf(l, time) {
+      const wind = windEnabled ? (windStrength + windGust) : 0;
+      ctx.save();
+      ctx.translate(l.x, l.y);
+      ctx.rotate(l.rot + Math.sin(time * 0.02 + l.phase) * 0.2 * wind);
+
+      ctx.beginPath();
+      ctx.ellipse(0, 0, l.size * 0.5, l.size * 0.25, 0, 0, Math.PI * 2);
+      ctx.fillStyle = l.color;
+      ctx.shadowColor = 'rgba(0,20,0,0.15)';
+      ctx.shadowBlur = 6;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(-l.size * 0.4, 0);
+      ctx.lineTo(l.size * 0.4, 0);
+      ctx.strokeStyle = 'rgba(30,60,20,0.25)';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawWindParticle(p, time) {
+      if (!particlesEnabled) return;
+      const wind = windEnabled ? (windStrength + windGust) : 0;
+      const alpha = Math.min(1, p.life * 1.5);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 0.4 + 0.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(230, 255, 240, ${alpha * 0.2})`;
+      ctx.shadowColor = 'rgba(200, 255, 230, 0.2)';
+      ctx.shadowBlur = 12;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      const tailX = p.x - Math.cos(windAngle) * p.size * 2.5 * wind;
+      const tailY = p.y - Math.sin(windAngle) * p.size * 2.0 * wind;
+      ctx.lineTo(tailX, tailY);
+      ctx.strokeStyle = `rgba(210, 250, 230, ${alpha * 0.08})`;
+      ctx.lineWidth = 1;
+      ctx.shadowBlur = 0;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    function drawRipples() {
+      for (let i = ripples.length - 1; i >= 0; i--) {
+        const r = ripples[i];
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(220, 255, 230, ${r.life * 0.4})`;
+        ctx.lineWidth = 1.8;
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = 'rgba(200, 255, 220, 0.25)';
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        r.radius += 0.9;
+        r.life -= 0.008;
+        if (r.life <= 0 || r.radius > 120) {
+          ripples.splice(i, 1);
+        }
+      }
+    }
+
+    // =====  TEKS "NAZUAN AHMAD"  =====
+    function drawText(time) {
+      const wind = windEnabled ? (windStrength + windGust) : 0;
+      
+      textTargetY = -60 - 15 * Math.sin(time * 0.015) * 0.3;
+      textVelocity += (textTargetY - textY) * 0.025;
+      textVelocity *= 0.9;
+      textY += textVelocity;
+
+      const centerX = W / 2;
+      const centerY = H / 2 + textY;
+      const swayX = Math.sin(time * 0.5) * 1.5 * wind * 0.5;
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(255, 215, 120, 0.4)';
+      ctx.shadowBlur = 50;
+
+      const grad = ctx.createLinearGradient(centerX - 180, centerY - 40, centerX + 180, centerY + 40);
+      grad.addColorStop(0, '#ffe88a');
+      grad.addColorStop(0.4, '#ffd966');
+      grad.addColorStop(0.7, '#f7c86a');
+      grad.addColorStop(1, '#dba84a');
+
+      ctx.font = 'bold 70px "Segoe UI", "Poppins", system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = '#1a2a1a';
+      ctx.fillText('NAZUAN AHMAD', centerX + swayX + 2, centerY + 3);
+
+      ctx.shadowColor = 'rgba(255, 220, 100, 0.6)';
+      ctx.shadowBlur = 40;
+      ctx.fillStyle = grad;
+      ctx.fillText('NAZUAN AHMAD', centerX + swayX, centerY);
+
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = 'rgba(255, 200, 80, 0.2)';
+      ctx.font = '20px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(255, 240, 200, 0.4)';
+      ctx.fillText('✦  bergerak dengan angin  ✦', centerX + swayX * 0.5, centerY + 60);
+
+      ctx.shadowBlur = 8;
+      ctx.strokeStyle = 'rgba(255, 220, 120, 0.15)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(centerX - 140 + swayX * 0.3, centerY + 80);
+      ctx.lineTo(centerX + 140 + swayX * 0.3, centerY + 80);
+      ctx.stroke();
+
+      ctx.restore();
+
+      for (let i = 0; i < 14; i++) {
+        const angle = i * 0.7 + time * 0.25;
+        const dist = 120 + 18 * Math.sin(time * 0.4 + i * 1.3);
+        const sx = centerX + swayX * 0.3 + Math.cos(angle) * dist;
+        const sy = centerY + Math.sin(angle) * dist * 0.35;
+        const sparkle = 0.2 + 0.5 * Math.sin(time * 1.8 + i * 1.7);
+        ctx.beginPath();
+        ctx.arc(sx, sy, 1.5 + sparkle * 2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 240, 180, ${sparkle * 0.5})`;
+        ctx.shadowColor = 'rgba(255, 220, 100, 0.3)';
+        ctx.shadowBlur = 12;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    // =============================================
+    //  UPDATE
+    // =============================================
+
+    function updateLeaves(time) {
+      const wind = windEnabled ? (windStrength + windGust) : 0;
+      for (let l of leaves) {
+        l.x += Math.cos(windAngle) * wind * 0.5 + l.vx;
+        l.y += Math.sin(windAngle) * wind * 0.25 + l.vy + Math.sin(time * 0.02 + l.phase) * 0.08;
+        l.rot += l.rotSpeed + (Math.random() - 0.5) * 0.004 * wind;
+
+        if (l.x > W + 30 || l.x < -30 || l.y > H + 30 || l.y < -30) {
+          Object.assign(l, createLeaf());
+          l.x = Math.random() * W * 0.3;
+          l.y = 20 + Math.random() * 50;
+        }
+        if (l.y < 10) l.y = 15;
+        if (l.y > H - 10) l.y = H - 15;
+      }
+    }
+
+    function updateWindParticles(time) {
+      if (!particlesEnabled) return;
+      const wind = windEnabled ? (windStrength + windGust) : 0;
+      for (let p of windParticles) {
+        p.x += Math.cos(windAngle) * p.speed * wind * 0.8 + (Math.random() - 0.5) * 0.2;
+        p.y += Math.sin(windAngle) * p.speed * wind * 0.35 + (Math.random() - 0.5) * 0.15;
+        p.life -= 0.0015 * (wind + 0.3);
+        if (p.life < 0.1 || p.x > W + 20 || p.x < -20 || p.y > H + 20 || p.y < -20) {
+          Object.assign(p, createWindParticle());
+          p.x = -10 - Math.random() * 30;
+          p.y = 20 + Math.random() * H * 0.5;
+          p.life = 0.6 + Math.random() * 0.4;
+        }
+      }
+    }
+
+    function updateWindGust() {
+      if (windEnabled) {
+        windGust = 0.25 + 0.35 * Math.sin(time * 0.028) + 0.15 * Math.sin(time * 0.065 + 1.2);
+        windStrength = 0.4 + 0.2 * Math.sin(time * 0.018 + 0.5);
+      } else {
+        windGust = 0;
+        windStrength = 0;
+      }
+    }
+
+    // =============================================
+    //  FUNGSI DOWNLOAD & COPY LINK
+    // =============================================
+
+    // Fungsi untuk mendownload sebagai HTML
+    window.downloadWallpaper = function() {
+      // Ambil kode HTML lengkap
+      const htmlContent = document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'NAZUAN_AHMAD_Wallpaper.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      // Notifikasi
+      showNotification('✅ Wallpaper berhasil didownload!');
+    };
+
+    // Fungsi untuk copy link (menggunakan data URI)
+    window.copyLink = function() {
+      // Buat data URI dari HTML
+      const htmlContent = document.documentElement.outerHTML;
+      const encoded = encodeURIComponent(htmlContent);
+      const dataUri = 'data:text/html;charset=utf-8,' + encoded;
+      
+      // Copy ke clipboard
+      navigator.clipboard.writeText(dataUri).then(() => {
+        showNotification('✅ Link wallpaper disalin!');
+        showNotification('📋 Paste di Telegram untuk bagikan');
+      }).catch(() => {
+        // Fallback
+        const textarea = document.createElement('textarea');
+        textarea.value = dataUri;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showNotification('✅ Link disalin! (manual)');
+      });
+    };
+
+    // Notifikasi sederhana
+    function showNotification(msg) {
+      const notif = document.createElement('div');
+      notif.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(10px);
+        color: #e2f0d6;
+        padding: 12px 28px;
+        border-radius: 30px;
+        border: 1px solid rgba(255,215,100,0.2);
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 14px;
+        z-index: 999;
+        opacity: 0;
+        transition: opacity 0.4s;
+        pointer-events: none;
+        text-align: center;
+        max-width: 90%;
+      `;
+      notif.textContent = msg;
+      document.body.appendChild(notif);
+      
+      requestAnimationFrame(() => {
+        notif.style.opacity = '1';
+      });
+      
+      setTimeout(() => {
+        notif.style.opacity = '0';
+        setTimeout(() => notif.remove(), 500);
+      }, 2500);
+    }
+
+    // =============================================
+    //  KONTROL
+    // =============================================
+
+    window.toggleWind = function() {
+      windEnabled = !windEnabled;
+      if (!windEnabled) {
+        windGust = 0;
+        windStrength = 0;
+      }
+    };
+
+    window.toggleParticles = function() {
+      particlesEnabled = !particlesEnabled;
+    };
+
+    window.resetText = function() {
+      textY = 0;
+      textVelocity = -5;
+    };
+
+    // =============================================
+    //  ANIMASI
+    // =============================================
+
+    function animate() {
+      time += 0.018;
+      updateWindGust();
+
+      const bgGrad = ctx.createRadialGradient(350, 120, 80, 700, 350, 800);
+      bgGrad.addColorStop(0, '#8fd4c4');
+      bgGrad.addColorStop(0.4, '#4d8f6f');
+      bgGrad.addColorStop(1, '#1d452a');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      drawGrass(time);
+      
+      for (let f of flowers) {
+        drawFlower(f, time);
+      }
+
+      updateLeaves(time);
+      for (let l of leaves) {
+        drawLeaf(l, time);
+      }
+
+      updateWindParticles(time);
+      for (let p of windParticles) {
+        drawWindParticle(p, time);
+      }
+
+      drawRipples();
+      drawText(time);
+
+      ctx.fillStyle = 'rgba(180, 210, 190, 0.02)';
+      ctx.fillRect(0, 0, W, H);
+
+      frameCount++;
+      if (time - lastFpsUpdate > 0.5) {
+        fps = Math.round(frameCount / (time - lastFpsUpdate));
+        frameCount = 0;
+        lastFpsUpdate = time;
+        document.getElementById('fpsDisplay').textContent = fps;
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    // =============================================
+    //  INTERAKSI
+    // =============================================
+
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const mx = (e.clientX - rect.left) * scaleX;
+      const my = (e.clientY - rect.top) * scaleY;
+
+      ripples.push({ x: mx, y: my, radius: 8, life: 0.8 });
+      
+      if (windEnabled) {
+        windGust += 0.5;
+        if (windGust > 1.6) windGust = 1.6;
+      }
+
+      for (let i = 0; i < 6; i++) {
+        if (particlesEnabled) {
+          windParticles.push({
+            x: mx + (Math.random() - 0.5) * 40,
+            y: my + (Math.random() - 0.5) * 40,
+            size: 1.5 + Math.random() * 4,
+            speed: 0.8 + Math.random() * 2,
+            life: 0.5 + Math.random() * 0.4,
+            phase: Math.random() * 6.28
+          });
+        }
+      }
+      if (windParticles.length > 100) {
+        windParticles.splice(0, windParticles.length - 80);
+      }
+
+      textVelocity -= 1.2;
+    });
+
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const mx = (touch.clientX - rect.left) * scaleX;
+      const my = (touch.clientY - rect.top) * scaleY;
+
+      ripples.push({ x: mx, y: my, radius: 8, life: 0.8 });
+      if (windEnabled) {
+        windGust += 0.4;
+        if (windGust > 1.6) windGust = 1.6;
+      }
+      for (let i = 0; i < 4; i++) {
+        if (particlesEnabled) {
+          windParticles.push({
+            x: mx + (Math.random() - 0.5) * 30,
+            y: my + (Math.random() - 0.5) * 30,
+            size: 1.5 + Math.random() * 3.5,
+            speed: 0.7 + Math.random() * 1.8,
+            life: 0.5 + Math.random() * 0.4,
+            phase: Math.random() * 6.28
+          });
+        }
+      }
+      if (windParticles.length > 100) {
+        windParticles.splice(0, windParticles.length - 80);
+      }
+      textVelocity -= 1.0;
+    }, { passive: false });
+
+    // =====  MULAI  =====
+    animate();
+
+    console.log('🌺 NAZUAN AHMAD · Wallpaper Telegram');
+    console.log('📥 Klik "Download" untuk save file');
+    console.log('🔗 Klik "Copy Link" untuk share di Telegram');
+
+  })();
+</script>
+</body>
+</html>
