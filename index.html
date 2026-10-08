@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistem Manajemen Kelas</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>📚 EduClass</h2>
+            </div>
+            <nav class="menu">
+                <a href="index.html" class="menu-item active">
+                    <span>🏠</span> Dashboard
+                </a>
+                <a href="pages/siswa.html" class="menu-item">
+                    <span>👨‍🎓</span> Data Siswa
+                </a>
+                <a href="pages/guru.html" class="menu-item">
+                    <span>👨‍🏫</span> Data Guru
+                </a>
+                <a href="pages/kelas.html" class="menu-item">
+                    <span>🏫</span> Data Kelas
+                </a>
+                <a href="pages/nilai.html" class="menu-item">
+                    <span>📊</span> Nilai
+                </a>
+                <a href="login.html" class="menu-item logout">
+                    <span>🚪</span> Logout
+                </a>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- HEADER -->
+            <header class="header">
+                <div class="header-left">
+                    <h1>Dashboard</h1>
+                    <p>Selamat datang kembali, <strong>Admin</strong>! 👋</p>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <input type="text" placeholder="Cari...">
+                    </div>
+                    <div class="user-profile">
+                        <div class="avatar">A</div>
+                        <div class="user-info">
+                            <span class="name">Admin</span>
+                            <span class="role">Administrator</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- STATISTIK CARDS -->
+            <section class="stats-grid">
+                <div class="stat-card blue">
+                    <div class="stat-icon">👨‍🎓</div>
+                    <div class="stat-info">
+                        <h3 id="totalSiswa">0</h3>
+                        <p>Total Siswa</p>
+                    </div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-icon">👨‍🏫</div>
+                    <div class="stat-info">
+                        <h3 id="totalGuru">0</h3>
+                        <p>Total Guru</p>
+                    </div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-icon">🏫</div>
+                    <div class="stat-info">
+                        <h3 id="totalKelas">0</h3>
+                        <p>Total Kelas</p>
+                    </div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <h3 id="totalNilai">0</h3>
+                        <p>Data Nilai</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- KONTEN GRID -->
+            <section class="content-grid">
+                <!-- Tabel Siswa Terbaru -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Siswa Terbaru</h3>
+                        <a href="pages/siswa.html" class="btn-link">Lihat Semua →</a>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>NIS</th>
+                                    <th>Nama</th>
+                                    <th>Kelas</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="siswaTerbaru">
+                                <!-- Diisi oleh JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Aktivitas -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Aktivitas Terbaru</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="activity-list">
+                            <li>
+                                <div class="activity-icon green">✓</div>
+                                <div class="activity-text">
+                                    <p><strong>Budi Santoso</strong> ditambahkan ke kelas XII IPA 1</p>
+                                    <span>5 menit lalu</span>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="activity-icon blue">📝</div>
+                                <div class="activity-text">
+                                    <p>Nilai <strong>Matematika</strong> telah diinput</p>
+                                    <span>1 jam lalu</span>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="activity-icon orange">👨‍🏫</div>
+                                <div class="activity-text">
+                                    <p><strong>Ibu Sari</strong> ditambahkan sebagai guru baru</p>
+                                    <span>2 jam lalu</span>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="activity-icon purple">📊</div>
+                                <div class="activity-text">
+                                    <p>Laporan bulanan telah dibuat</p>
+                                    <span>1 hari lalu</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Grafik Distribusi -->
+            <section class="card full-width">
+                <div class="card-header">
+                    <h3>Distribusi Siswa per Kelas</h3>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bars" id="chartKelas">
+                        <!-- Diisi oleh JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- FOOTER -->
+            <footer class="footer">
+                <p>© 2025 EduClass - Sistem Manajemen Kelas</p>
+            </footer>
+        </main>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
