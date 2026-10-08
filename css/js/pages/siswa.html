@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Data Siswa - EduClass</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo"><h2>📚 EduClass</h2></div>
+            <nav class="menu">
+                <a href="../index.html" class="menu-item"><span>🏠</span> Dashboard</a>
+                <a href="siswa.html" class="menu-item active"><span>👨‍🎓</span> Data Siswa</a>
+                <a href="guru.html" class="menu-item"><span>👨‍🏫</span> Data Guru</a>
+                <a href="kelas.html" class="menu-item"><span>🏫</span> Data Kelas</a>
+                <a href="nilai.html" class="menu-item"><span>📊</span> Nilai</a>
+                <a href="../login.html" class="menu-item logout"><span>🚪</span> Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <h1>Data Siswa</h1>
+                    <p>Kelola semua data siswa di sini</p>
+                </div>
+                <button class="btn-primary" style="width:auto; padding:10px 20px;">+ Tambah Siswa</button>
+            </header>
+
+            <div class="card">
+                <div class="card-body">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>NIS</th>
+                                <th>Nama</th>
+                                <th>Kelas</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelSiswa"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/data.js"></script>
+    <script>
+        const tbody = document.getElementById('tabelSiswa');
+        DATA.siswa.forEach((s, i) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${s.nis}</td>
+                    <td>${s.nama}</td>
+                    <td>${s.kelas}</td>
+                    <td><span class="badge ${s.status === 'Aktif' ? 'aktif' : 'tidak-aktif'}">${s.status}</span></td>
+                    <td>
+                        <button style="padding:4px 10px; border:none; background:#dbeafe; color:#1e40af; border-radius:6px; cursor:pointer;">Edit</button>
+                        <button style="padding:4px 10px; border:none; background:#fee2e2; color:#991b1b; border-radius:6px; cursor:pointer;">Hapus</button>
+                    </td>
+                </tr>
+            `;
+        });
+    </script>
+</body>
+</html>
